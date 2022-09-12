@@ -11,64 +11,61 @@ export const getUsers = (req: Request, res: Response, next: NextFunction) => {
 
 export const createUser = (req: Request, res: Response, next: NextFunction) => {
   const { name, about, avatar } = req.body;
-  if (name === '' || about === '') throw new BadRequestError('Некорректные данные пользователя');
-  return User.create({ name, about, avatar })
-    .then((user) => res.send(user))
-    .catch(next);
+  const newUser = new User({ name, about, avatar });
+  newUser.validate()
+    .then(() => {
+      User.create({ name, about, avatar })
+        .then((user) => res.send(user))
+        .catch(next);
+    })
+    .catch(() => {
+      next(new BadRequestError('Некорректные данные пользователя'));
+    });
 };
 
 export const getCurrentUser = (req: Request, res: Response, next: NextFunction) => {
   User.findById(req.params.userId)
-    .then((user) => {
-      res.send(user);
-    })
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        const error = new NotFoundError('Пользователь не найден');
-        next(error);
-      } else {
-        next(err);
-      }
-    });
+    .orFail(() => new NotFoundError('Пользователь не найден'))
+    .then((user) => res.send(user))
+    .catch(next);
 };
 
 export const updateUser = (req: CustomRequest, res: Response, next: NextFunction) => {
-  /* eslint no-underscore-dangle: ["error", { "allow": ["_id"] }] */
   const userId = req.user && req.user._id;
   const { name, about } = req.body;
-  if (name === '' || about === '') throw new BadRequestError('Некорректные данные пользователя');
-  return User.findByIdAndUpdate(
-    userId,
-    { name, about },
-    { new: true },
-  )
-    .then((user) => res.send(user))
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        const error = new NotFoundError('Пользователь не найден');
-        next(error);
-      } else {
-        next(err);
-      }
+  const userUpdate = new User({ name, about, avatar: 'dont changed' });
+  userUpdate.validate()
+    .then(() => {
+      User.findByIdAndUpdate(
+        userId,
+        { name, about },
+        { new: true },
+      )
+        .orFail(() => new NotFoundError('Пользователь не найден'))
+        .then((user) => res.send(user))
+        .catch(next);
+    })
+    .catch(() => {
+      next(new BadRequestError('Некорректные данные пользователя'));
     });
 };
 
 export const updateUserAvatar = (req: CustomRequest, res: Response, next: NextFunction) => {
   const userId = req.user && req.user._id;
   const { avatar } = req.body;
-  if (avatar === '') throw new BadRequestError('Некорректные данные пользователя');
-  return User.findByIdAndUpdate(
-    userId,
-    { avatar },
-    { new: true },
-  )
-    .then((user) => res.send(user))
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        const error = new NotFoundError('Пользователь не найден');
-        next(error);
-      } else {
-        next(err);
-      }
+  const userUpdate = new User({ name: 'dont changed', about: 'dont changed', avatar });
+  userUpdate.validate()
+    .then(() => {
+      User.findByIdAndUpdate(
+        userId,
+        { avatar },
+        { new: true },
+      )
+        .orFail(() => new NotFoundError('Пользователь не найден'))
+        .then((user) => res.send(user))
+        .catch(next);
+    })
+    .catch(() => {
+      next(new BadRequestError('Некорректные данные пользователя'));
     });
 };
