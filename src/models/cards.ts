@@ -11,8 +11,8 @@ interface ICard {
 const cardSchema = new mongoose.Schema<ICard>({
   name: {
     type: String,
-    minlength: 2,
-    maxlength: 30,
+    minlength: [2, 'Название должно содержать не менее 2х символов'],
+    maxlength: [30, 'Название не должно содержать более 30 символов'],
     required: true,
   },
   link: {
