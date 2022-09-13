@@ -17,8 +17,10 @@ export const createCard = (req: CustomRequest, res: Response, next: NextFunction
       res.send(card);
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') next(new BadRequestError('Переданы некорректные данные'));
-      next(err);
+      if (err.name === 'ValidationError') {
+        next(new BadRequestError('Переданы некорректные данные'));
+      }
+      return next(err);
     });
 };
 
@@ -28,7 +30,12 @@ export const deleteCard = (req: CustomRequest, res: Response, next: NextFunction
     .then((card) => {
       res.send(card);
     })
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        next(new NotFoundError('Карточка не найдена'));
+      }
+      return next(err);
+    });
 };
 
 export const addLikeCard = (req: CustomRequest, res: Response, next: NextFunction) => {
@@ -41,7 +48,12 @@ export const addLikeCard = (req: CustomRequest, res: Response, next: NextFunctio
   )
     .orFail(() => new NotFoundError('Карточка не найдена'))
     .then((card) => res.send(card))
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        next(new NotFoundError('Карточка не найдена'));
+      }
+      return next(err);
+    });
 };
 
 export const deleteLikeCard = (req: CustomRequest, res: Response, next: NextFunction) => {
@@ -54,5 +66,10 @@ export const deleteLikeCard = (req: CustomRequest, res: Response, next: NextFunc
   )
     .orFail(() => new NotFoundError('Карточка не найдена'))
     .then((card) => res.send(card))
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        next(new NotFoundError('Карточка не найдена'));
+      }
+      return next(err);
+    });
 };
