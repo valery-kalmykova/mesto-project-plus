@@ -14,8 +14,10 @@ export const createUser = (req: Request, res: Response, next: NextFunction) => {
   return User.create({ name, about, avatar })
     .then((user) => res.send(user))
     .catch((err) => {
-      if (err.name === 'ValidationError') next(new BadRequestError('Переданы некорректные данные'));
-      next(err);
+      if (err.name === 'ValidationError') {
+        next(new BadRequestError('Переданы некорректные данные'));
+      }
+      return next(err);
     });
 };
 
@@ -23,7 +25,12 @@ export const getCurrentUser = (req: Request, res: Response, next: NextFunction) 
   User.findById(req.params.userId)
     .orFail(() => new NotFoundError('Пользователь не найден'))
     .then((user) => res.send(user))
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        next(new NotFoundError('Пользователь не найдена'));
+      }
+      return next(err);
+    });
 };
 
 export const updateUser = (req: CustomRequest, res: Response, next: NextFunction) => {
@@ -40,8 +47,10 @@ export const updateUser = (req: CustomRequest, res: Response, next: NextFunction
     .orFail(() => new NotFoundError('Пользователь не найден'))
     .then((user) => res.send(user))
     .catch((err) => {
-      if (err.name === 'ValidationError') next(new BadRequestError('Переданы некорректные данные'));
-      next(err);
+      if (err.name === 'ValidationError') {
+        next(new BadRequestError('Переданы некорректные данные'));
+      }
+      return next(err);
     });
 };
 
@@ -59,7 +68,9 @@ export const updateUserAvatar = (req: CustomRequest, res: Response, next: NextFu
     .orFail(() => new NotFoundError('Пользователь не найден'))
     .then((user) => res.send(user))
     .catch((err) => {
-      if (err.name === 'ValidationError') next(new BadRequestError('Переданы некорректные данные'));
-      next(err);
+      if (err.name === 'ValidationError') {
+        next(new BadRequestError('Переданы некорректные данные'));
+      }
+      return next(err);
     });
 };
