@@ -1,10 +1,14 @@
-import express, { Request, Response, NextFunction } from 'express';
+import express, { Request, Response } from 'express';
 import path from 'path';
 import mongoose from 'mongoose';
+import { celebrate, Joi, errors } from 'celebrate';
 import userRoutes from './routes/users';
 import cardRoutes from './routes/cards';
-import { CustomRequest } from './types';
 import errorsHandler from './middlewares/errorsHandler';
+import { login, createUser } from './controllers/users';
+import auth from './middlewares/auth';
+import { requestLogger, errorLogger } from './middlewares/logger';
+import urlPattern from './utils/utils';
 
 const { PORT = 3000 } = process.env;
 const app = express();
@@ -19,16 +23,28 @@ database.once('connected', () => {
   console.log('Database Connected');
 });
 
-app.use((req: CustomRequest, res: Response, next: NextFunction) => {
-  req.user = {
-    _id: '631b2a44cb5defa18c1b4aff',
-  };
-
-  next();
-});
-
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
+
+app.use(requestLogger);
+
+app.post('/signin', celebrate({
+  body: Joi.object().keys({
+    email: Joi.string().required(),
+    password: Joi.string().required(),
+  }),
+}), login);
+app.post('/signup', celebrate({
+  body: Joi.object().keys({
+    name: Joi.string().min(2).max(30),
+    about: Joi.string().min(2).max(200),
+    avatar: Joi.string().pattern(new RegExp(urlPattern)),
+    email: Joi.string().required(),
+    password: Joi.string().required(),
+  }),
+}), createUser);
+
+app.use(auth as express.RequestHandler);
 
 app.use('/users', userRoutes);
 app.use('/cards', cardRoutes);
@@ -44,6 +60,8 @@ app.get('/', (req: Request, res: Response) => {
 });
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use(errorLogger);
+app.use(errors());
 app.use(errorsHandler);
 
 app.listen(PORT, () => {
