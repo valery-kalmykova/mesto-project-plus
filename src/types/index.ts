@@ -1,9 +1,12 @@
 import { Request } from 'express';
+import { JwtPayload } from 'jsonwebtoken';
+
+export interface JwtPayloadC extends JwtPayload {
+  _id: string
+}
 
 export interface CustomRequest extends Request {
-  user?: {
-    _id: string
-  }
+  user?: JwtPayloadC
 }
 
 export interface IError {

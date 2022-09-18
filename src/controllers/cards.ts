@@ -10,7 +10,7 @@ export const getCards = (req: Request, res: Response, next: NextFunction) => {
 };
 
 export const createCard = (req: CustomRequest, res: Response, next: NextFunction) => {
-  const owner = req.user && req.user._id;
+  const owner = req.user?._id;
   const { name, link } = req.body;
   return Card.create({ name, link, owner })
     .then((card) => {
@@ -25,10 +25,14 @@ export const createCard = (req: CustomRequest, res: Response, next: NextFunction
 };
 
 export const deleteCard = (req: CustomRequest, res: Response, next: NextFunction) => {
-  Card.findByIdAndRemove(req.params.cardId)
+  const user = req.user?._id;
+  return Card.findById(req.params.cardId)
     .orFail(() => new NotFoundError('Карточка не найдена'))
     .then((card) => {
-      res.send(card);
+      if (card.owner.toString() !== user) throw new BadRequestError('Невозможно удалить карточку');
+      return Card.remove(req.params.cardId)
+        .then((result) => res.send(result))
+        .catch((err) => next(err));
     })
     .catch((err) => {
       if (err.name === 'CastError') {
@@ -39,7 +43,7 @@ export const deleteCard = (req: CustomRequest, res: Response, next: NextFunction
 };
 
 export const addLikeCard = (req: CustomRequest, res: Response, next: NextFunction) => {
-  const owner = req.user && req.user._id;
+  const owner = req.user?._id;
   if (!owner) throw new BadRequestError('Переданы некорректные данные');
   return Card.findByIdAndUpdate(
     req.params.cardId,
@@ -57,7 +61,7 @@ export const addLikeCard = (req: CustomRequest, res: Response, next: NextFunctio
 };
 
 export const deleteLikeCard = (req: CustomRequest, res: Response, next: NextFunction) => {
-  const owner = req.user && req.user._id;
+  const owner = req.user?._id;
   if (!owner) throw new BadRequestError('Переданы некорректные данные');
   return Card.findByIdAndUpdate(
     req.params.cardId,
