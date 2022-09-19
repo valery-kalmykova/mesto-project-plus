@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import Card from '../models/cards';
 import { CustomRequest } from '../types';
-import { BadRequestError, NotFoundError } from '../errors';
+import { BadRequestError, NotFoundError, ForbiddenError } from '../errors';
 
 export const getCards = (req: Request, res: Response, next: NextFunction) => {
   Card.find({})
@@ -29,10 +29,9 @@ export const deleteCard = (req: CustomRequest, res: Response, next: NextFunction
   return Card.findById(req.params.cardId)
     .orFail(() => new NotFoundError('Карточка не найдена'))
     .then((card) => {
-      if (card.owner.toString() !== user) throw new BadRequestError('Невозможно удалить карточку');
-      return Card.remove(req.params.cardId)
-        .then((result) => res.send(result))
-        .catch((err) => next(err));
+      if (card.owner.toString() !== user) throw new ForbiddenError('Невозможно удалить карточку');
+      card.remove();
+      return res.send('success');
     })
     .catch((err) => {
       if (err.name === 'CastError') {

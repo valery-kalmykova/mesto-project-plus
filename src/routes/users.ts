@@ -6,30 +6,26 @@ import {
   updateUser,
   updateUserAvatar,
 } from '../controllers/users';
+import { urlPattern, validateObjectId } from '../utils/utils';
 
 const router = Router();
 
 router.get('/', getUsers);
-router.get('/me', celebrate({
-  headers: Joi.object().keys({
-    token: Joi.string().token().required(),
+router.get('/:userId', celebrate({
+  params: Joi.object().keys({
+    userId: Joi.string().required().custom(validateObjectId, 'validate id'),
   }),
 }), getCurrentUser);
+router.get('/me', getCurrentUser);
 router.patch('/me', celebrate({
-  headers: Joi.object().keys({
-    token: Joi.string().token().required(),
-  }),
   body: Joi.object().keys({
     name: Joi.string().required().min(2).max(30),
     about: Joi.string().required().min(2).max(200),
   }),
 }), updateUser);
 router.patch('/me/avatar', celebrate({
-  headers: Joi.object().keys({
-    token: Joi.string().token().required(),
-  }),
   body: Joi.object().keys({
-    avatar: Joi.string().required(),
+    avatar: Joi.string().required().pattern(new RegExp(urlPattern)),
   }),
 }), updateUserAvatar);
 
