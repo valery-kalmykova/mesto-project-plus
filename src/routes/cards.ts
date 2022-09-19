@@ -7,6 +7,7 @@ import {
   addLikeCard,
   deleteLikeCard,
 } from '../controllers/cards';
+import { urlPattern, validateObjectId } from '../utils/utils';
 
 const router = Router();
 
@@ -14,34 +15,22 @@ router.get('/', getCards);
 router.post('/', celebrate({
   body: Joi.object().keys({
     name: Joi.string().required().min(2).max(30),
-    link: Joi.string().required(),
+    link: Joi.string().required().pattern(new RegExp(urlPattern)),
   }),
-  headers: Joi.object().keys({
-    authorization: Joi.string().required(),
-  }).unknown(true),
 }), createCard);
 router.delete('/:cardId', celebrate({
-  headers: Joi.object().keys({
-    authorization: Joi.string().required(),
-  }).unknown(true),
   params: Joi.object().keys({
-    cardId: Joi.string().required(),
+    cardId: Joi.string().required().custom(validateObjectId, 'validate id'),
   }),
 }), deleteCard);
 router.patch('/:cardId/likes', celebrate({
-  headers: Joi.object().keys({
-    authorization: Joi.string().required(),
-  }).unknown(true),
   params: Joi.object().keys({
-    cardId: Joi.string().required(),
+    cardId: Joi.string().required().custom(validateObjectId, 'validate id'),
   }),
 }), addLikeCard);
 router.delete('/:cardId/likes', celebrate({
-  headers: Joi.object().keys({
-    authorization: Joi.string().required(),
-  }).unknown(true),
   params: Joi.object().keys({
-    cardId: Joi.string().required(),
+    cardId: Joi.string().required().custom(validateObjectId, 'validate id'),
   }),
 }), deleteLikeCard);
 

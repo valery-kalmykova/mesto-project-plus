@@ -8,7 +8,7 @@ import errorsHandler from './middlewares/errorsHandler';
 import { login, createUser } from './controllers/users';
 import auth from './middlewares/auth';
 import { requestLogger, errorLogger } from './middlewares/logger';
-import urlPattern from './utils/utils';
+import { urlPattern } from './utils/utils';
 
 const { PORT = 3000 } = process.env;
 const app = express();
@@ -30,7 +30,7 @@ app.use(requestLogger);
 
 app.post('/signin', celebrate({
   body: Joi.object().keys({
-    email: Joi.string().required(),
+    email: Joi.string().required().email(),
     password: Joi.string().required(),
   }),
 }), login);
@@ -39,7 +39,7 @@ app.post('/signup', celebrate({
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(200),
     avatar: Joi.string().pattern(new RegExp(urlPattern)),
-    email: Joi.string().required(),
+    email: Joi.string().required().email(),
     password: Joi.string().required(),
   }),
 }), createUser);
