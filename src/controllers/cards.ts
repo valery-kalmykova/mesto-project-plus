@@ -30,8 +30,9 @@ export const deleteCard = (req: CustomRequest, res: Response, next: NextFunction
     .orFail(() => new NotFoundError('Карточка не найдена'))
     .then((card) => {
       if (card.owner.toString() !== user) throw new ForbiddenError('Невозможно удалить карточку');
-      card.remove();
-      return res.send('success');
+      card.remove()
+        .then((result) => res.send(result))
+        .catch((err) => next(err));
     })
     .catch((err) => {
       if (err.name === 'CastError') {
